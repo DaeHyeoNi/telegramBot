@@ -27,7 +27,7 @@ def get_stock_code(args):
 
 async def get_kospi_info(update, context):
     if len(context.args) == 0:
-        get_kospi_point(update, context)
+        await get_kospi_point(update, context)
         return
 
     logging.info(">>> 코스피 종목 정보" + str(context.args))
