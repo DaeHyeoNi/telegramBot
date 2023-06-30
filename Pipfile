@@ -12,6 +12,7 @@ beautifulsoup4 = "*"
 black = "*"
 isort = "*"
 schedule = "*"
+hyperframe = "*"
 
 [dev-packages]
 
