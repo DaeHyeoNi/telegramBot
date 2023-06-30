@@ -92,26 +92,32 @@ async def get_usstock_info(update, context):
         current_percent = element.xpath(
             '//*[@id="quote-header-info"]/div[3]/div[1]/div[1]/fin-streamer[3]/span'
         )[0].text
-        is_after_market = (
-            "After"
-            in element.xpath(
-                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[2]/span'
+
+        try:
+            is_after_market = (
+                "After"
+                in element.xpath(
+                    '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[2]/span'
+                )[0].text
+            )
+            market_label = "애프터장" if is_after_market else "프리장"
+
+            pre_price = element.xpath(
+                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/fin-streamer[2]'
             )[0].text
-        )
-        market_label = "애프터장" if is_after_market else "프리장"
+            pre_updown = element.xpath(
+                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[1]/span'
+            )[0].text
+            pre_percent = element.xpath(
+                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[2]/span'
+            )[0].text
 
-        pre_price = element.xpath(
-            '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/fin-streamer[2]'
-        )[0].text
-        pre_updown = element.xpath(
-            '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[1]/span'
-        )[0].text
-        pre_percent = element.xpath(
-            '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[2]/span'
-        )[0].text
-
-        message = f"[{company_name}]\n현재가: {current_price} {current_updown} {current_percent}\n{market_label}: {pre_price} {pre_updown} {pre_percent}"
-    except:
+            message = f"[{company_name}]\n종가: {current_price} {current_updown} {current_percent}\n{market_label}: {pre_price} {pre_updown} {pre_percent}"
+        except Exception:
+            # 본장
+            message = f"[{company_name}]\n현재가: {current_price} {current_updown} {current_percent}"
+    except Exception as e:
+        logging.error(e)
         message = "종목 정보를 찾지 못했습니다."
 
     await context.bot.send_message(chat_id=update.message.chat_id, text=message)
