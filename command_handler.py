@@ -71,8 +71,8 @@ class CommandHandler:
         self.set_command("usstock", stock.get_usstock_info)
         self.set_command("nasdaq", stock.get_usstock_info)
 
-        self.set_command("usd", partial(currency.get_currency_data, code=Country.USA))
-        self.set_command("jpy", partial(currency.get_currency_data, code=Country.JAPAN))
+        self.set_command("usd", partial(currency.get_currency_data, code=Country.USA), [self.create_help_message("usd", "미국 환율")])
+        self.set_command("jpy", partial(currency.get_currency_data, code=Country.JAPAN), [self.create_help_message("jpy", "일본 환율")])
 
         self.set_command("fg", fear_and_greed_index)
 
