@@ -10,6 +10,7 @@ from config import build_application, get_configuration
 
 ADD_HELP_BLANK_LINE = ""
 
+
 def _create_commands():
     command_handler = CommandHandler(app, get_configuration())
     simple_commands = SimpleCommands()
