@@ -90,7 +90,7 @@ async def get_korea_market_point(
 
 
 async def get_usstock_info(
-    update: Update, context: ContextTypes.DEFAULT_TYPE, ticker: Optional[str]
+    update: Update, context: ContextTypes.DEFAULT_TYPE, ticker: Optional[str] = None
 ):
     if ticker is None:
         ticker = str(context.args[0]).upper()
