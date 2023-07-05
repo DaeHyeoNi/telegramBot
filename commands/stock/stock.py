@@ -1,23 +1,29 @@
 import json
 import logging
 import time
+from datetime import datetime
+from typing import Optional
 
 from lxml import html
-from commands.request_wrapper import RequestWrapper
+from telegram import Update
+from telegram.ext import ContextTypes
 
 import commands.stock.stock_data as stock_data
-from commands.stock.korean_market_point import get_kospi_point
+from commands.request_wrapper import RequestWrapper
+from commands.stock.common import KoreanMarketType
 
 df_code = stock_data.create()
 
 
-def get_stock_code(args):
+def get_stock_code(args: str):
     code = ""
     if args[0].isnumeric():
         code = args[0]
     else:
         try:
-            stock_name = " ".join(args[:-1]) if args[-1] == "주봉" else " ".join(args)
+            stock_name = (
+                " ".join(args[:-1]) if args[-1] in ["일봉", "주봉"] else " ".join(args)
+            )
             code = str(df_code[stock_name][0])
             logging.info(">>> 코스피 종목 이름으로 " + code + " 반환")
         except:
@@ -25,19 +31,19 @@ def get_stock_code(args):
     return code
 
 
-async def get_kospi_info(update, context):
-    if len(context.args) == 0:
-        await get_kospi_point(update, context)
-        return
+async def get_kospi_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await get_korea_market_point(
+            update, context, type=KoreanMarketType.KOSPI
+        )
 
     logging.info(">>> 코스피 종목 정보" + str(context.args))
 
     code = get_stock_code(context.args)
     if code is None:
-        await context.bot.send_message(
+        return await context.bot.send_message(
             chat_id=update.message.chat_id, text="종목 정보를 찾지 못했습니다."
         )
-        return
 
     url = "https://polling.finance.naver.com/api/realtime/domestic/stock/" + code
     request_wrapper = RequestWrapper()
@@ -60,19 +66,36 @@ async def get_kospi_info(update, context):
     for retry_count in range(3):
         try:
             photo_url = f"{chart_photo_endpoint}{code}.png?ver={str(int(time.time()))}"
-            await context.bot.send_photo(
+            return await context.bot.send_photo(
                 chat_id=update.message.chat_id, photo=photo_url, caption=caption
             )
         except Exception:
             logging.error(f">>> 코스피 종목 정보 에러 {retry_count}회 재시도")
             time.sleep(1)
             continue
-        break
 
 
-async def get_usstock_info(update, context):
-    logging.info(">>> 미국 주식정보" + str(context.args))
-    ticker = "^IXIC" if len(context.args) == 0 else str(context.args[0]).upper()
+async def get_korea_market_point(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, type: KoreanMarketType
+):
+    url = f"https://m.stock.naver.com/api/index/{type.value}/basic"
+    request_wrapper = RequestWrapper()
+    response = request_wrapper.get(url)
+    resp = json.loads(response.text)
+
+    await context.bot.send_message(
+        chat_id=update.message.chat_id,
+        text=f'{type.name} 지수: {resp["closePrice"]} ({resp["compareToPreviousClosePrice"]} {resp["fluctuationsRatio"]}%)',
+    )
+
+
+async def get_usstock_info(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, ticker: Optional[str]
+):
+    if ticker is None:
+        ticker = str(context.args[0]).upper()
+    logging.info(f">>> 미국 주식정보 {ticker}")
+
     url = "https://finance.yahoo.com/quote/" + ticker + "/"
     request_wrapper = RequestWrapper()
     response = request_wrapper.get(url)
@@ -121,3 +144,17 @@ async def get_usstock_info(update, context):
         message = "종목 정보를 찾지 못했습니다."
 
     await context.bot.send_message(chat_id=update.message.chat_id, text=message)
+
+
+async def fear_and_greed_index(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        url = f'https://production.dataviz.cnn.io/index/fearandgreed/graphdata/{datetime.now().strftime("%Y-%m-%d")}'
+        request_wrapper = RequestWrapper()
+        response = request_wrapper.get(url)
+        response.raise_for_status()
+        data = response.json()
+        score = round(data["fear_and_greed"]["score"], 1)
+        rating = data["fear_and_greed"]["rating"]
+        await update.message.reply_text(f"현재 fear & greed Index\n{score} {rating}\n")
+    except Exception:
+        await update.message.reply_text("데이터를 가져오는데 실패했습니다.")

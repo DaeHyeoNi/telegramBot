@@ -16,29 +16,29 @@ def build_application() -> Application:
             raise KeyError
     except Exception as e:
         if os.path.exists("config.ini"):
-            logging.error("not set token in config.ini")
+            logging.error("Token is not set in config.ini")
         logging.error(e)
 
 
 def create_config_file():
-    DEAFULT_CONFIG = {
+    DEFAULT_CONFIG = {
         "telegram": {
             "token": "",
             "except_commands": "",
+            "logging_level": "INFO",
         }
     }
 
     if not os.path.exists("config.ini"):
         config = configparser.ConfigParser()
-        config.read_dict(DEAFULT_CONFIG)
+        config.read_dict(DEFAULT_CONFIG)
         with open("config.ini", "w", encoding="utf-8") as configfile:
             config.write(configfile)
 
 
-@staticmethod
 def get_configuration():
     if not os.path.exists("config.ini"):
-        logging.error("config.ini not exists. create config.ini ...")
+        logging.error("config.ini does not exist. Creating config.ini...")
         create_config_file()
         exit()
 

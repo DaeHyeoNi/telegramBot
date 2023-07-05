@@ -4,8 +4,9 @@ from typing import List
 
 from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, ContextTypes
+from telegram.ext import Application
 from telegram.ext import CommandHandler as _CommandHandler
+from telegram.ext import ContextTypes
 
 
 class CommandHandler:
@@ -21,20 +22,23 @@ class CommandHandler:
     def create_help_message(self, command: str, description: str):
         return f"/{command} : {description}"
 
-    def set_command(self, command: str, func, helps: List[str] = None):
+    def set_command(self, command: str, func, /, help_text: List[str] = None):
         if command not in self.except_commands:
             logging.info(f"Setting command: {command}")
             self.app.add_handler(_CommandHandler(command, func))
-            if helps:
-                assert isinstance(helps, list), "helps must be list"
-                self.help_list.extend(helps)
+            if help_text:
+                assert isinstance(help_text, list), "helps must be list"
+                self.help_list.extend(help_text)
 
 
 class SimpleCommands:
     async def _help(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE, help_list: List[str]
     ):
-        escaped_help_list = [re.escape(item) for item in help_list]
+        escaped_help_list = [
+            item.replace("(", "\\(").replace(")", "\\)").replace("=", "\\=")
+            for item in help_list
+        ]
         text = "\n".join(escaped_help_list)
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN_V2)
 
