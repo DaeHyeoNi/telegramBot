@@ -1,10 +1,12 @@
+from enum import Enum
 import json
 import logging
 import time
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from lxml import html
+import requests
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -89,13 +91,7 @@ async def get_korea_market_point(
     )
 
 
-async def get_usstock_info(
-    update: Update, context: ContextTypes.DEFAULT_TYPE, ticker: Optional[str] = None
-):
-    if ticker is None:
-        ticker = str(context.args[0]).upper()
-    logging.info(f">>> 미국 주식정보 {ticker}")
-
+def fetch_usstock_data(ticker: str) -> Tuple[str, str]:
     url = "https://finance.yahoo.com/quote/" + ticker + "/"
     request_wrapper = RequestWrapper()
     response = request_wrapper.get(url)
@@ -135,15 +131,97 @@ async def get_usstock_info(
                 '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[2]/span'
             )[0].text
 
-            message = f"[{company_name}]\n종가: {current_price} {current_updown} {current_percent}\n{market_label}: {pre_price} {pre_updown} {pre_percent}"
+            message = f"종가: {current_price} {current_updown} {current_percent}\n{market_label}: {pre_price} {pre_updown} {pre_percent}"
         except Exception:
             # 본장
-            message = f"[{company_name}]\n현재가: {current_price} {current_updown} {current_percent}"
+            message = f"현재가: {current_price} {current_updown} {current_percent}"
     except Exception as e:
         logging.error(e)
+        company_name = None
         message = "종목 정보를 찾지 못했습니다."
 
-    await context.bot.send_message(chat_id=update.message.chat_id, text=message)
+    return company_name, message
+
+
+class ChartType(Enum):
+    REALTIME = "실시간"
+    DAY = "일봉"
+    WEEK = "주봉"
+    MONTHLY = "월봉"
+    MONTH_1 = "1개월"
+    MONTH_3 = "3개월"
+    YEAR = "1년"
+    YERR_3 = "3년"
+    YEAR_10 = "10년"
+
+
+def fetch_usstock_chart_photo(
+    ticker: str, chart_type: ChartType
+) -> Optional[Union[bytes, bool]]:
+    try:
+        chart_types_mapper = {
+            ChartType.REALTIME: ("d", "stock"),
+            ChartType.MONTH_1: ("m", "stock"),
+            ChartType.MONTH_3: ("m3", "stock"),
+            ChartType.YEAR: ("y", "stock"),
+            ChartType.YERR_3: ("y3", "stock"),
+            ChartType.YEAR_10: ("y10", "stock"),
+            ChartType.DAY: ("d", "candle"),
+            ChartType.WEEK: ("w", "candle"),
+            ChartType.MONTHLY: ("m", "candle"),
+        }[chart_type]
+    except KeyError:
+        return False
+
+    url = f"https://t1.daumcdn.net/finance/chart/us/{chart_types_mapper[1]}/{chart_types_mapper[0]}/{ticker}.png?timestamp={str(int(time.time()))}"
+    res = requests.get(url)
+    if res.status_code != 200:
+        return None
+    # current project directory in "market_close.png"
+    import os
+
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    market_close_path = os.path.join(current_path, "market_close.png")
+    if os.path.exists(market_close_path):
+        with open(market_close_path, "rb") as f:
+            file = f.read()
+            if file == res.content:
+                return None
+    return res.content
+
+
+async def get_usstock_info(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, ticker: Optional[str] = None
+):
+    if ticker is None:
+        ticker = str(context.args[0]).upper()
+    logging.info(f">>> 미국 주식정보 {ticker}")
+
+    try:
+        if len(context.args) == 1:
+            chart_type = ChartType.REALTIME
+        else:
+            chart_type = ChartType(str(context.args[1]))
+    except Exception:
+        message = f"잘못된 차트 타입입니다.\n가능한 값: {', '.join([str(chart_type.value) for chart_type in ChartType])}"
+        await context.bot.send_message(chat_id=update.message.chat_id, text=message)
+        return
+
+    company_name, stock_data = fetch_usstock_data(ticker)
+    photo = fetch_usstock_chart_photo(ticker, chart_type)
+
+    message = f"[{company_name}]"
+    if photo:
+        message += f" {chart_type.value}\n{stock_data}"
+    else:
+        message += f"\n{stock_data}"
+
+    if photo:
+        await context.bot.send_photo(
+            chat_id=update.message.chat_id, photo=photo, caption=message
+        )
+    else:
+        await context.bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
 async def fear_and_greed_index(update: Update, context: ContextTypes.DEFAULT_TYPE):
