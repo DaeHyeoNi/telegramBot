@@ -1,18 +1,18 @@
-from enum import Enum
 import json
 import logging
 import time
 from datetime import datetime
 from typing import Optional, Tuple, Union
 
-from lxml import html
 import requests
+from lxml import html
 from telegram import Update
 from telegram.ext import ContextTypes
 
 import commands.stock.stock_data as stock_data
 from commands.request_wrapper import RequestWrapper
 from commands.stock.common import KoreanMarketType
+from commands.stock.enums import ChartType
 
 df_code = stock_data.create()
 
@@ -143,16 +143,23 @@ def fetch_usstock_data(ticker: str) -> Tuple[str, str]:
     return company_name, message
 
 
-class ChartType(Enum):
-    REALTIME = "실시간"
-    DAY = "일봉"
-    WEEK = "주봉"
-    MONTHLY = "월봉"
-    MONTH_1 = "1개월"
-    MONTH_3 = "3개월"
-    YEAR = "1년"
-    YERR_3 = "3년"
-    YEAR_10 = "10년"
+def _validate_chart_image(image: bytes) -> bool:
+    # caching in memory (global variable)
+    global market_close_image
+    try:
+        return market_close_image == image
+    except NameError:
+        # file read only once
+        import os
+
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        market_close_path = os.path.join(current_path, "market_close.png")
+        if os.path.exists(market_close_path):
+            with open(market_close_path, "rb") as f:
+                market_close_image = f.read()
+                return market_close_image == image
+
+    raise Exception("chart image validation failed")
 
 
 def fetch_usstock_chart_photo(
@@ -177,16 +184,10 @@ def fetch_usstock_chart_photo(
     res = requests.get(url)
     if res.status_code != 200:
         return None
-    # current project directory in "market_close.png"
-    import os
 
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    market_close_path = os.path.join(current_path, "market_close.png")
-    if os.path.exists(market_close_path):
-        with open(market_close_path, "rb") as f:
-            file = f.read()
-            if file == res.content:
-                return None
+    if _validate_chart_image(res.content):
+        return None
+
     return res.content
 
 
@@ -198,7 +199,7 @@ async def get_usstock_info(
     logging.info(f">>> 미국 주식정보 {ticker}")
 
     try:
-        if len(context.args) == 1:
+        if len(context.args) <= 1:
             chart_type = ChartType.REALTIME
         else:
             chart_type = ChartType(str(context.args[1]))
@@ -210,7 +211,7 @@ async def get_usstock_info(
     company_name, stock_data = fetch_usstock_data(ticker)
     photo = fetch_usstock_chart_photo(ticker, chart_type)
 
-    message = f"[{company_name}]"
+    message = f"[{company_name}]" if company_name else ""
     if photo:
         message += f" {chart_type.value}\n{stock_data}"
     else:
