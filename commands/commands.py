@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import List
 
 from telegram import Update
@@ -30,17 +29,10 @@ class CommandHandler:
                 assert isinstance(help_text, list), "helps must be list"
                 self.help_list.extend(help_text)
 
-
-class SimpleCommands:
-    async def _help(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE, help_list: List[str]
-    ):
+    async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         escaped_help_list = [
             item.replace("(", "\\(").replace(")", "\\)").replace("=", "\\=")
-            for item in help_list
+            for item in self.help_list
         ]
         text = "\n".join(escaped_help_list)
         await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN_V2)
-
-    async def _ping(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("pong")
