@@ -30,9 +30,4 @@ class CommandHandler:
                 self.help_list.extend(help_text)
 
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        escaped_help_list = [
-            item.replace("(", "\\(").replace(")", "\\)").replace("=", "\\=")
-            for item in self.help_list
-        ]
-        text = "\n".join(escaped_help_list)
-        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN_V2)
+        await update.message.reply_text("\n".join(self.help_list))

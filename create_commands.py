@@ -1,5 +1,6 @@
 from functools import partial
 from typing import Dict
+from commands import choice
 
 from commands.commands import CommandHandler
 from commands.ping import ping
@@ -54,6 +55,10 @@ commands: Dict[str, Dict] = {
         "func": partial(currency.get_currency_data, code=Country.JAPAN),
         "help": ["/jpy: 일본 환율"],
     },
+    "choice": {
+        "func": choice.choice,
+        "help": ["\n/choice 선택1 선택2 선택3... : 선택지 중 하나를 랜덤으로 골라줍니다."],
+    }
 }
 
 
