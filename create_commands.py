@@ -1,11 +1,10 @@
-from functools import partial
-from typing import Dict
 from commands import choice
-
 from commands.commands import CommandHandler
 from commands.ping import ping
 from commands.stock import currency, stock
 from commands.stock.common import Country, KoreanMarketType
+from functools import partial
+from typing import Dict
 
 commands: Dict[str, Dict] = {
     "ping": {"func": ping, "help": ["/ping: 상태 체크"]},
@@ -58,7 +57,7 @@ commands: Dict[str, Dict] = {
     "choice": {
         "func": choice.choice,
         "help": ["\n/choice 선택1 선택2 선택3... : 선택지 중 하나를 랜덤으로 골라줍니다."],
-    }
+    },
 }
 
 

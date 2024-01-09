@@ -1,6 +1,6 @@
 import logging
-
 from commands.commands import CommandHandler
+
 from config import build_application, get_configuration
 from create_commands import create_commands
 
