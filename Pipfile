@@ -13,6 +13,7 @@ black = "*"
 isort = "*"
 schedule = "*"
 hyperframe = "*"
+gitpython = "*"
 
 [dev-packages]
 
