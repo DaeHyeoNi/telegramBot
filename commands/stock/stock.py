@@ -236,3 +236,29 @@ async def fear_and_greed_index(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(f"현재 fear & greed Index\n{score} {rating}\n")
     except Exception:
         await update.message.reply_text("데이터를 가져오는데 실패했습니다.")
+
+
+async def wallstreetbets(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    def sentiment_to_emoji(sentiment: str) -> str:
+        if sentiment == "Bullish":
+            return "🚀"
+        elif sentiment == "Bearish":
+            return "📉"
+        else:
+            return "🤷‍♂️"
+
+    try:
+        url = "https://tradestie.com/api/v1/apps/reddit"
+        request_wrapper = RequestWrapper()
+        response = request_wrapper.get(url)
+        response.raise_for_status()
+        data = response.json()
+        message = ""
+        # for loop to get top 10 stocks (from dict[arr])
+        for i, d in enumerate(data):
+            if i == 10:
+                break
+            message += f"{i+1}. {d['ticker']} {sentiment_to_emoji(d['sentiment'])} ({d['sentiment_score']})\n"
+        await update.message.reply_text(f"댓글이 많은 순서\n{message}")
+    except Exception:
+        await update.message.reply_text("데이터를 가져오는데 실패했습니다.")

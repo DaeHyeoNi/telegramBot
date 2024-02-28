@@ -46,6 +46,10 @@ commands: Dict[str, Dict] = {
         "help": ["/btc: 비트코인"],
     },
     "fg": {"func": stock.fear_and_greed_index, "help": ["\n/fg: Fear and Greed Index"]},
+    "wb": {
+        "func": stock.wallstreetbets,
+        "help": ["/wb: wallstreetbets 에서 가장 많이 언급된 상위 10개의 주식 정보"],
+    },
     "usd": {
         "func": partial(currency.get_currency_data, code=Country.USA),
         "help": ["\n/usd: 미국 환율"],
@@ -56,7 +60,9 @@ commands: Dict[str, Dict] = {
     },
     "choice": {
         "func": choice.choice,
-        "help": ["\n/choice 선택1 선택2 선택3... : 선택지 중 하나를 랜덤으로 골라줍니다."],
+        "help": [
+            "\n/choice 선택1 선택2 선택3... : 선택지 중 하나를 랜덤으로 골라줍니다."
+        ],
     },
     "version": {
         "func": version.version,

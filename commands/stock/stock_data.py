@@ -44,6 +44,8 @@ def create() -> Dict[Hashable, int]:
     stock_data = pd.read_csv(
         CSV_FILE_NAME, usecols=["한글 종목약명", "단축코드"], encoding="utf8"
     )
-    df_code: Dict[Hashable, int] = stock_data.set_index("한글 종목약명").T.to_dict("list")
+    df_code: Dict[Hashable, int] = stock_data.set_index("한글 종목약명").T.to_dict(
+        "list"
+    )
     df_code = apply_custom_fixtures(df_code)
     return df_code
