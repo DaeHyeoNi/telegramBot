@@ -238,6 +238,19 @@ async def fear_and_greed_index(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text("데이터를 가져오는데 실패했습니다.")
 
 
+async def btc(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = "https://api.upbit.com/v1/ticker?markets=KRW-BTC"
+    request_wrapper = RequestWrapper()
+    response = request_wrapper.get(url)
+    data = response.json()
+    trade_price = int(data[0]["trade_price"])
+    signed_change_rate = data[0]["signed_change_rate"] * 100
+    signed_change_price = int(data[0]["signed_change_price"])
+    await update.message.reply_text(
+        f"[업비트] 현재가: {trade_price:,}원 ({signed_change_rate:.2f}% {signed_change_price})"
+    )
+
+
 async def wallstreetbets(update: Update, context: ContextTypes.DEFAULT_TYPE):
     def sentiment_to_emoji(sentiment: str) -> str:
         if sentiment == "Bullish":

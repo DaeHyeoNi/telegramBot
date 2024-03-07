@@ -42,7 +42,7 @@ commands: Dict[str, Dict] = {
         "help": ["/gold: 금값"],
     },
     "btc": {
-        "func": partial(stock.get_usstock_info, ticker="BTC-USD"),
+        "func": stock.btc,
         "help": ["/btc: 비트코인"],
     },
     "fg": {"func": stock.fear_and_greed_index, "help": ["\n/fg: Fear and Greed Index"]},
