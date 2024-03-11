@@ -247,7 +247,7 @@ async def btc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     signed_change_rate = data[0]["signed_change_rate"] * 100
     signed_change_price = int(data[0]["signed_change_price"])
     await update.message.reply_text(
-        f"[업비트] 현재가: {trade_price:,}원 ({signed_change_rate:.2f}% {signed_change_price})"
+        f"[업비트] 현재가: {trade_price:,}원 ({signed_change_rate:.2f}% {signed_change_price:,})"
     )
 
 
