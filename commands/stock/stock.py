@@ -99,35 +99,35 @@ def fetch_usstock_data(ticker: str) -> Tuple[str, str]:
 
     try:
         company_name = element.xpath(
-            '//*[@id="quote-header-info"]/div[2]/div[1]/div[1]/h1'
+            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[1]/div/section/h1'
         )[0].text
         current_price = element.xpath(
-            '//*[@id="quote-header-info"]/div[3]/div[1]/div[1]/fin-streamer[1]'
+            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[1]/div[1]/fin-streamer[1]/span'
         )[0].text
         current_updown = element.xpath(
-            '//*[@id="quote-header-info"]/div[3]/div[1]/div[1]/fin-streamer[2]/span'
+            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[1]/div[1]/fin-streamer[2]/span'
         )[0].text
         current_percent = element.xpath(
-            '//*[@id="quote-header-info"]/div[3]/div[1]/div[1]/fin-streamer[3]/span'
+            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[1]/div[1]/fin-streamer[3]/span'
         )[0].text
 
         try:
             is_after_market = (
                 "After"
                 in element.xpath(
-                    '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[2]/span'
+                    '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[2]/span'
                 )[0].text
             )
             market_label = "애프터장" if is_after_market else "프리장"
 
             pre_price = element.xpath(
-                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/fin-streamer[2]'
+                '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[1]/fin-streamer[1]/span'
             )[0].text
             pre_updown = element.xpath(
-                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[1]/span'
+                '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[1]/fin-streamer[2]/span'
             )[0].text
             pre_percent = element.xpath(
-                '//*[@id="quote-header-info"]/div[3]/div[1]/div[2]/span[1]/fin-streamer[2]/span'
+                '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[1]/fin-streamer[3]/span'
             )[0].text
 
             message = f"종가: {current_price} {current_updown} {current_percent}\n{market_label}: {pre_price} {pre_updown} {pre_percent}"
