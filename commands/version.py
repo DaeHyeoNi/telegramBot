@@ -1,6 +1,6 @@
+import git
 from telegram import Update
 from telegram.ext import ContextTypes
-import git
 
 
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):

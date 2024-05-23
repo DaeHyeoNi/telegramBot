@@ -1,10 +1,7 @@
-import commands.stock.stock_data as stock_data
 import json
 import logging
 import time
-from commands.request_wrapper import RequestWrapper
-from commands.stock.common import KoreanMarketType
-from commands.stock.enums import ChartType
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Optional, Tuple, Union
 
@@ -12,6 +9,11 @@ import requests
 from lxml import html
 from telegram import Update
 from telegram.ext import ContextTypes
+
+import commands.stock.stock_data as stock_data
+from commands.request_wrapper import RequestWrapper
+from commands.stock.common import KoreanMarketType
+from commands.stock.enums import ChartType
 
 df_code = stock_data.create()
 
@@ -90,7 +92,7 @@ async def get_korea_market_point(
     )
 
 
-def fetch_usstock_data(ticker: str) -> Tuple[str, str]:
+def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
     url = "https://finance.yahoo.com/quote/" + ticker + "/"
     request_wrapper = RequestWrapper()
     response = request_wrapper.get(url)
@@ -136,8 +138,11 @@ def fetch_usstock_data(ticker: str) -> Tuple[str, str]:
             message = f"현재가: {current_price} {current_updown} {current_percent}"
     except Exception as e:
         logging.error(e)
-        company_name = None
+        company_name = ticker
         message = "종목 정보를 찾지 못했습니다."
+
+    if flat:
+        message = message.replace("\n", " ")
 
     return company_name, message
 
@@ -194,7 +199,12 @@ async def get_usstock_info(
     update: Update, context: ContextTypes.DEFAULT_TYPE, ticker: Optional[str] = None
 ):
     if ticker is None:
+        if len(context.args) > 1:
+            if not (context.args[1] in [chart_type.value for chart_type in ChartType]):
+                await get_usstock_info_multiple(update, context)
+                return
         ticker = str(context.args[0]).upper()
+
     logging.info(f">>> 미국 주식정보 {ticker}")
 
     try:
@@ -222,6 +232,23 @@ async def get_usstock_info(
         )
     else:
         await context.bot.send_message(chat_id=update.message.chat_id, text=message)
+
+
+async def get_usstock_info_multiple(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    tickers = context.args
+    logging.info(f">>> 미국 주식정보 (multiple) {tickers}")
+
+    message = ""
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(fetch_usstock_data, ticker, True): ticker
+            for ticker in tickers
+        }
+        for future in as_completed(futures):
+            company_name, stock_data = future.result()
+            message += f"{company_name}\n{stock_data}\n\n"
+
+    await context.bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
 async def fear_and_greed_index(update: Update, context: ContextTypes.DEFAULT_TYPE):

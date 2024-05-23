@@ -1,10 +1,11 @@
+from functools import partial
+from typing import Dict
+
 from commands import choice, version
 from commands.commands import CommandHandler
 from commands.ping import ping
 from commands.stock import currency, stock
 from commands.stock.common import Country, KoreanMarketType
-from functools import partial
-from typing import Dict
 
 commands: Dict[str, Dict] = {
     "ping": {"func": ping, "help": ["/ping: 상태 체크"]},
@@ -18,7 +19,10 @@ commands: Dict[str, Dict] = {
     },
     "us": {
         "func": stock.get_usstock_info,
-        "help": ["\n/us (ticker): 미국 주식 정보"],
+        "help": [
+            "\n/us (ticker): 미국 주식 정보",
+            "/us (ticker) (ticker) ... 와 같은 형식으로 여러 종목 조회가 가능",
+        ],
         "alias": ["usstock"],
     },
     "nasdaq": {

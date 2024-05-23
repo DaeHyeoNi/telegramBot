@@ -1,10 +1,11 @@
 import time
-from commands.request_wrapper import RequestWrapper
-from commands.stock.common import Country
 from typing import Tuple
 
 from telegram import Update
 from telegram.ext import ContextTypes
+
+from commands.request_wrapper import RequestWrapper
+from commands.stock.common import Country
 
 
 class Currency:
