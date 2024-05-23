@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime
 from typing import Optional, Tuple, Union
 
@@ -244,7 +244,10 @@ async def get_usstock_info_multiple(update: Update, context: ContextTypes.DEFAUL
             executor.submit(fetch_usstock_data, ticker, True): ticker
             for ticker in tickers
         }
-        for future in as_completed(futures):
+
+        done, not_done = wait(futures.keys(), return_when=ALL_COMPLETED)
+
+        for future in futures.keys():
             company_name, stock_data = future.result()
             message += f"{company_name}\n{stock_data}\n\n"
 
