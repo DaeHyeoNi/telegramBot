@@ -1,7 +1,8 @@
+import json
 from typing import Dict
+
 import requests
 from bs4 import BeautifulSoup
-import json
 
 
 class RobinHood:
