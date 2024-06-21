@@ -6,16 +6,19 @@ from datetime import datetime
 from typing import Optional, Tuple, Union
 
 import requests
-from lxml import html
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from commands.stock.robinhood import RobinHood
 import commands.stock.stock_data as stock_data
 from commands.request_wrapper import RequestWrapper
 from commands.stock.common import KoreanMarketType
 from commands.stock.enums import ChartType
 
 df_code = stock_data.create()
+
+rh = RobinHood()
+rh.load_data()
 
 
 def get_stock_code(args: str):
@@ -93,53 +96,45 @@ async def get_korea_market_point(
 
 
 def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
-    url = "https://finance.yahoo.com/quote/" + ticker + "/"
-    request_wrapper = RequestWrapper()
-    response = request_wrapper.get(url)
-    data = response.text
-    element = html.fromstring(data)
+    ticker = ticker.upper()
+    data = rh.get_data(ticker)
 
-    try:
-        company_name = element.xpath(
-            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[1]/div/section/h1'
-        )[0].text
-        current_price = element.xpath(
-            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[1]/div[1]/fin-streamer[1]/span'
-        )[0].text
-        current_updown = element.xpath(
-            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[1]/div[1]/fin-streamer[2]/span'
-        )[0].text
-        current_percent = element.xpath(
-            '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[1]/div[1]/fin-streamer[3]/span'
-        )[0].text
+    if not data:
+        return "", "종목 정보를 찾지 못했습니다."
 
-        try:
-            is_after_market = (
-                "After"
-                in element.xpath(
-                    '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[2]/span'
-                )[0].text
-            )
-            market_label = "애프터장" if is_after_market else "프리장"
+    company_name = f"{data['chart_section']['header'][0]['text']} ({ticker})"
 
-            pre_price = element.xpath(
-                '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[1]/fin-streamer[1]/span'
-            )[0].text
-            pre_updown = element.xpath(
-                '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[1]/fin-streamer[2]/span'
-            )[0].text
-            pre_percent = element.xpath(
-                '//*[@id="nimbus-app"]/section/section/section/article/section[1]/div[2]/div[1]/section/div/section[2]/div[1]/fin-streamer[3]/span'
-            )[0].text
+    last_trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
+    last_extended_hours_trade_price = data["chart_section"]["quote"][
+        "last_extended_hours_trade_price"
+    ]
 
-            message = f"종가: {current_price} {current_updown} {current_percent}\n{market_label}: {pre_price} {pre_updown} {pre_percent}"
-        except Exception:
-            # 본장
-            message = f"현재가: {current_price} {current_updown} {current_percent}"
-    except Exception as e:
-        logging.error(e)
-        company_name = ticker
-        message = "종목 정보를 찾지 못했습니다."
+    current_price = last_trade_price
+    if last_extended_hours_trade_price:
+        current_price = float(last_extended_hours_trade_price)
+
+    previous_close = float(data["chart_section"]["quote"]["previous_close"])
+
+    market_label = data["chart_section"]["default_display"]["secondary_value"][
+        "description"
+    ]["value"]
+
+    if market_label == "Overnight":
+        market_label = "데이마켓"
+    elif market_label == "Pre-market":
+        market_label = "프리장"
+    elif market_label == "Today":
+        market_label = "현재가"
+
+    change = current_price - previous_close
+    change = round(change, 2)
+    change_raito = (current_price / previous_close - 1) * 100
+    change_raito = round(change_raito, 2)
+
+    def sign_number(n):
+        return "+" + str(n) if n > 0 else str(n)
+
+    message = f"{market_label} {current_price} {sign_number(change)} ({sign_number(change_raito)}%)"
 
     if flat:
         message = message.replace("\n", " ")
@@ -221,7 +216,7 @@ async def get_usstock_info(
     photo = fetch_usstock_chart_photo(ticker, chart_type)
 
     message = f"[{company_name}]" if company_name else ""
-    if photo:
+    if photo and chart_type != ChartType.REALTIME:
         message += f" {chart_type.value}\n{stock_data}"
     else:
         message += f"\n{stock_data}"
