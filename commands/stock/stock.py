@@ -9,11 +9,11 @@ import requests
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from commands.stock.robinhood import RobinHood
 import commands.stock.stock_data as stock_data
 from commands.request_wrapper import RequestWrapper
 from commands.stock.common import KoreanMarketType
 from commands.stock.enums import ChartType
-from commands.stock.robinhood import RobinHood
 
 df_code = stock_data.create()
 
@@ -115,15 +115,16 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
 
     previous_close = float(data["chart_section"]["quote"]["previous_close"])
 
-    market_label = data["chart_section"]["default_display"]["secondary_value"][
-        "description"
-    ]["value"]
+    _display = data["chart_section"]["default_display"]
+    last_display = _display["tertiary_value"] or _display["secondary_value"] or _display["primary_value"]
 
-    if market_label == "Overnight":
+    _market_label = last_display["description"]["value"]
+
+    if _market_label == "Overnight":
         market_label = "데이마켓"
-    elif market_label == "Pre-market":
+    elif _market_label == "Pre-market":
         market_label = "프리장"
-    elif market_label == "Today":
+    elif _market_label == "Today":
         market_label = "현재가"
 
     change = current_price - previous_close
