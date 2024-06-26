@@ -121,12 +121,15 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
     primary_value = _display["primary_value"]["value"]
     last_trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
     previous_close_price = float(data["chart_section"]["quote"]["previous_close"])
-    secondary_value, secondary_value_desc = _display["secondary_value"]["main"][
-        "value"
-    ], translate_market_desc(_display["secondary_value"]["description"]["value"])
-    tertiary_value, tertiary_value_desc = _display["tertiary_value"]["main"][
-        "value"
-    ], translate_market_desc(_display["tertiary_value"]["description"]["value"])
+
+    if secondary_value := _display.get("secondary_value"):
+        secondary_value, secondary_value_desc = _display["secondary_value"]["main"][
+            "value"
+        ], translate_market_desc(_display["secondary_value"]["description"]["value"])
+    if tertiary_value := _display.get("tertiary_value"):
+        tertiary_value, tertiary_value_desc = _display["tertiary_value"]["main"][
+            "value"
+        ], translate_market_desc(_display["tertiary_value"]["description"]["value"])
 
     last_market_name = "정규장"
 
