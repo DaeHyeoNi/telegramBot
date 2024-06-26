@@ -95,6 +95,18 @@ async def get_korea_market_point(
     )
 
 
+def translate_market_desc(value):
+    if value == "Overnight":
+        return "데이마켓"
+    elif value == "Pre-market":
+        return "프리장"
+    elif value == "Today":
+        return "현재가"
+    elif value == "After-hours":
+        return "시간외"
+    return value
+
+
 def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
     ticker = ticker.upper()
     data = rh.get_data(ticker)
@@ -104,39 +116,25 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
 
     company_name = f"{data['chart_section']['header'][0]['text']} ({ticker})"
 
-    last_trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
-    last_extended_hours_trade_price = data["chart_section"]["quote"][
-        "last_extended_hours_trade_price"
-    ]
-
-    current_price = last_trade_price
-    previous_close = float(data["chart_section"]["quote"]["previous_close"])
-
-    if last_extended_hours_trade_price:
-        current_price = float(last_extended_hours_trade_price)
-        previous_close = last_trade_price
-
     _display = data["chart_section"]["default_display"]
-    last_display = _display["tertiary_value"] or _display["secondary_value"] or _display["primary_value"]
 
-    _market_label = last_display["description"]["value"]
+    primary_value = _display['primary_value']['value']
+    last_trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
+    previous_close_price = float(data["chart_section"]["quote"]["previous_close"])
+    secondary_value, secondary_value_desc = _display['secondary_value']['main']['value'], translate_market_desc(_display['secondary_value']['description']['value'])
+    tertiary_value, tertiary_value_desc = _display['tertiary_value']['main']['value'], translate_market_desc(_display['tertiary_value']['description']['value'])
 
-    if _market_label == "Overnight":
-        market_label = "데이마켓"
-    elif _market_label == "Pre-market":
-        market_label = "프리장"
-    elif _market_label == "Today":
-        market_label = "현재가"
+    last_market_name = '정규장'
 
-    change = current_price - previous_close
-    change = round(change, 2)
-    change_raito = (current_price / previous_close - 1) * 100
-    change_raito = round(change_raito, 2)
+    message = f"{primary_value} ({last_trade_price} <- {previous_close_price})"
+    if secondary_value:
+        message += f"\n{secondary_value_desc}: {secondary_value}"
+        last_market_name = secondary_value_desc
+    if tertiary_value:
+        message += f"\n{tertiary_value_desc}: {tertiary_value}"
+        last_market_name = tertiary_value_desc
 
-    def sign_number(n):
-        return "+" + str(n) if n > 0 else str(n)
-
-    message = f"{market_label} {current_price} {sign_number(change)} ({sign_number(change_raito)}%)"
+    message = f"{last_market_name}: {message}"
 
     if flat:
         message = message.replace("\n", " ")
@@ -219,7 +217,7 @@ async def get_usstock_info(
 
     message = f"[{company_name}]" if company_name else ""
     if photo and chart_type != ChartType.REALTIME:
-        message += f" {chart_type.value}\n{stock_data}"
+        message += f" {chart_type.value} {stock_data}"
     else:
         message += f"\n{stock_data}"
 
