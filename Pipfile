@@ -14,6 +14,7 @@ isort = "*"
 schedule = "*"
 hyperframe = "*"
 gitpython = "*"
+httpcore = {extras = ["asyncio"], version = "*"}
 
 [dev-packages]
 
