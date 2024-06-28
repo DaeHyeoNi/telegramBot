@@ -120,6 +120,13 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
 
     primary_value = _display["primary_value"]["value"]
     last_trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
+    last_extended_hours_trade_price = float(
+        data["chart_section"]["quote"].get("last_extended_hours_trade_price", 0)
+    )
+
+    if last_extended_hours_trade_price:
+        last_trade_price = last_extended_hours_trade_price
+
     previous_close_price = float(data["chart_section"]["quote"]["previous_close"])
 
     if secondary_value := _display.get("secondary_value"):
