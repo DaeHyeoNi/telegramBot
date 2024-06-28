@@ -119,13 +119,10 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
     _display = data["chart_section"]["default_display"]
 
     primary_value = _display["primary_value"]["value"]
-    last_trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
-    last_extended_hours_trade_price = float(
-        data["chart_section"]["quote"].get("last_extended_hours_trade_price", 0)
-    )
+    trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
 
-    if last_extended_hours_trade_price:
-        last_trade_price = last_extended_hours_trade_price
+    if data["chart_section"]["quote"]["last_extended_hours_trade_price"] is not None:
+        trade_price = float(data["chart_section"]["quote"]["last_extended_hours_trade_price"])
 
     previous_close_price = float(data["chart_section"]["quote"]["previous_close"])
 
@@ -138,11 +135,11 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
             "value"
         ], translate_market_desc(_display["tertiary_value"]["description"]["value"])
 
-    message = f"정규장: {last_trade_price}"
+    message = f"정규장: {trade_price}"
     if secondary_value:
-        message = f"{secondary_value_desc}: {last_trade_price} {secondary_value}"
+        message = f"{secondary_value_desc}: {trade_price} {secondary_value}"
     if tertiary_value:
-        message = f"{tertiary_value_desc}: {last_trade_price} {tertiary_value}"
+        message = f"{tertiary_value_desc}: {trade_price} {tertiary_value}"
 
     if flat:
         message = message.replace("\n", " ")
