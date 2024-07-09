@@ -122,7 +122,9 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
     trade_price = float(data["chart_section"]["quote"]["last_trade_price"])
 
     if data["chart_section"]["quote"]["last_extended_hours_trade_price"] is not None:
-        trade_price = float(data["chart_section"]["quote"]["last_extended_hours_trade_price"])
+        trade_price = float(
+            data["chart_section"]["quote"]["last_extended_hours_trade_price"]
+        )
 
     previous_close_price = float(data["chart_section"]["quote"]["previous_close"])
 
