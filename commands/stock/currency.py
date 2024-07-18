@@ -9,9 +9,7 @@ from commands.stock.common import Country
 
 
 class Currency:
-    FOREX_API_ENDPOINT = (
-        "https://crix-api-cdn.upbit.com/v1/forex/recent?codes=FRX.KRW"
-    )
+    FOREX_API_ENDPOINT = "https://crix-api-cdn.upbit.com/v1/forex/recent?codes=FRX.KRW"
     FOREX_CHART_ENDPOINT = "https://ssl.pstatic.net/imgfinance/chart/marketindex/area/month3/FX_{}KRW.png?ver={}"
 
     def fetch(self, code: Country) -> Tuple[float, str, int]:

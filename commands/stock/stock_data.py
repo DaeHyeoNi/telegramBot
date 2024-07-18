@@ -5,6 +5,7 @@ import requests
 
 CSV_FILE_NAME = "stock_data.csv"
 
+
 def get_default_headers() -> Dict[str, str]:
     return {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -14,7 +15,9 @@ def get_default_headers() -> Dict[str, str]:
 def get_stock_data() -> None:
     code = _get_otp()
     download_url = "http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd"
-    res = requests.post(download_url, data={"code": code}, headers=get_default_headers())
+    res = requests.post(
+        download_url, data={"code": code}, headers=get_default_headers()
+    )
     res.raise_for_status()
     decoded_content = res.content.decode("euc-kr")
     with open(CSV_FILE_NAME, "w", encoding="utf-8") as f:
