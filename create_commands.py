@@ -64,7 +64,9 @@ commands: Dict[str, Dict] = {
     },
     "choice": {
         "func": choice.choice,
-        "help": ["\n/choice 선택1 선택2 선택3... : 선택지 중 하나를 랜덤으로 골라줍니다."],
+        "help": [
+            "\n/choice 선택1 선택2 선택3... : 선택지 중 하나를 랜덤으로 골라줍니다."
+        ],
     },
     "version": {
         "func": version.version,
