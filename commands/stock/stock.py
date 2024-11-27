@@ -137,11 +137,14 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
             "value"
         ], translate_market_desc(_display["tertiary_value"]["description"]["value"])
 
-    message = ""
-    if secondary_value:
-        message += f"{secondary_value_desc}: {trade_price} {secondary_value}"
-    if tertiary_value:
-        message += f"{tertiary_value_desc}: {trade_price} {tertiary_value}"
+    message = "\n".join(
+        f"{desc}: {trade_price} {value}"
+        for desc, value in [
+            (secondary_value_desc, secondary_value),
+            (tertiary_value_desc, tertiary_value)
+        ]
+        if value
+    )
 
     if flat:
         message = message.replace("\n", " ")
