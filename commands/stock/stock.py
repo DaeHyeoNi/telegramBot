@@ -3,7 +3,7 @@ import logging
 import time
 from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime
-from typing import Dict, Optional, Union
+from typing import Optional, Union, Dict
 
 import requests
 from telegram import Update
@@ -41,7 +41,7 @@ class MarketDataFetcher:
         return json.loads(response.text)
 
     @staticmethod
-    def fetch_us_stock(ticker: str) -> tuple[str, str]:
+    def fetch_us_stock(ticker: str, flat: bool = False) -> tuple[str, str]:
         """미국 주식 데이터를 가져옵니다."""
         ticker = ticker.upper()
         data = rh.get_data(ticker)
@@ -49,10 +49,12 @@ class MarketDataFetcher:
         if not data:
             return "", "종목 정보를 찾지 못했습니다."
 
-        return MarketDataFetcher._parse_us_stock_data(data, ticker)
+        return MarketDataFetcher._parse_us_stock_data(data, ticker, flat)
 
     @staticmethod
-    def _parse_us_stock_data(data: Dict, ticker: str) -> tuple[str, str]:
+    def _parse_us_stock_data(
+        data: Dict, ticker: str, flat: bool = False
+    ) -> tuple[str, str]:
         """미국 주식 데이터를 파싱합니다."""
         company_name = f"{data['chart_section']['header'][0]['text']} ({ticker})"
         display = data["chart_section"]["default_display"]
@@ -71,7 +73,8 @@ class MarketDataFetcher:
                 val = value["main"]["value"]
                 messages.append(f"{desc}: {trade_price} {val}")
 
-        return company_name, "\n".join(messages)
+        message = " ".join(messages) if flat else "\n".join(messages)
+        return company_name, message
 
     @staticmethod
     def _translate_market_desc(value: str) -> str:
