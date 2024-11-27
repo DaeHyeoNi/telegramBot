@@ -128,6 +128,9 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
 
     previous_close_price = float(data["chart_section"]["quote"]["previous_close"])
 
+    secondary_value, secondary_value_desc = None, None
+    tertiary_value, tertiary_value_desc = None, None
+
     if secondary_value := _display.get("secondary_value"):
         secondary_value, secondary_value_desc = _display["secondary_value"]["main"][
             "value"
