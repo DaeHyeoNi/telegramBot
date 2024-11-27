@@ -143,7 +143,7 @@ def fetch_usstock_data(ticker: str, flat: bool = False) -> Tuple[str, str]:
             (secondary_value_desc, secondary_value),
             (tertiary_value_desc, tertiary_value)
         ]
-        if value
+        if desc and value
     )
 
     if flat:
