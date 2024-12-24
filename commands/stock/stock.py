@@ -60,9 +60,7 @@ class MarketDataFetcher:
         display = data["chart_section"]["default_display"]
         quote = data["chart_section"]["quote"]
 
-        trade_price = float(
-            quote["last_extended_hours_trade_price"] or quote["last_trade_price"]
-        )
+        trade_price = float(quote["last_trade_price"])
 
         messages = []
         for value_type in ["secondary_value", "tertiary_value"]:
@@ -70,6 +68,8 @@ class MarketDataFetcher:
                 desc = MarketDataFetcher._translate_market_desc(
                     value["description"]["value"]
                 )
+                if desc != "현재가":
+                    trade_price = float(quote["last_extended_hours_trade_price"])
                 val = value["main"]["value"]
                 messages.append(f"{desc}: {trade_price} {val}")
 
