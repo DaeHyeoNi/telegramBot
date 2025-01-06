@@ -3,7 +3,7 @@ import logging
 import time
 from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime
-from typing import Optional, Union, Dict
+from typing import Dict, Optional, Union
 
 import requests
 from telegram import Update
@@ -52,6 +52,15 @@ class MarketDataFetcher:
         return MarketDataFetcher._parse_us_stock_data(data, ticker, flat)
 
     @staticmethod
+    def _get_icon_by_profit_percent(profit_percent: float) -> str:
+        """수익률에 따른 아이콘을 반환합니다."""
+        if profit_percent >= 3:
+            return "🚀"
+        elif profit_percent >= 0:
+            return "📈"
+        return "📉"
+
+    @staticmethod
     def _parse_us_stock_data(
         data: Dict, ticker: str, flat: bool = False
     ) -> tuple[str, str]:
@@ -71,7 +80,8 @@ class MarketDataFetcher:
                 if desc != "현재가":
                     trade_price = float(quote["last_extended_hours_trade_price"])
                 val = value["main"]["value"]
-                messages.append(f"{desc}: {trade_price} {val}")
+                icon = MarketDataFetcher._get_icon_by_profit_percent(trade_price)
+                messages.append(f"{icon} {desc}: {trade_price} {val}")
 
         message = " ".join(messages) if flat else "\n".join(messages)
         return company_name, message
