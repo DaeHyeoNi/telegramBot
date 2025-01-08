@@ -14,9 +14,9 @@ def build_application() -> Application:
     if not token:
         raise ValueError("Telegram token is empty in config.ini")
 
-    request = HTTPXRequest(timeout=10)
+    timeout = 10.0
 
-    return ApplicationBuilder().token(token).request(request).build()
+    return ApplicationBuilder().token(token).read_timeout(timeout).build()
 
 
 def create_config_file():
