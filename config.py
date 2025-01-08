@@ -3,21 +3,20 @@ import logging
 import os
 
 from telegram.ext import Application, ApplicationBuilder
+from telegram.request import HTTPXRequest
 
 
 def build_application() -> Application:
     config = get_configuration()
 
-    try:
-        token = config["telegram"]["token"]
-        if token:
-            return ApplicationBuilder().token(token).build()
-        else:
-            raise KeyError
-    except Exception as e:
-        if os.path.exists("config.ini"):
-            logging.error("Token is not set in config.ini")
-        logging.error(e)
+    token = config["telegram"]["token"]
+
+    if not token:
+        raise ValueError("Telegram token is empty in config.ini")
+
+    request = HTTPXRequest(timeout=10)
+
+    return ApplicationBuilder().token(token).request(request).build()
 
 
 def create_config_file():

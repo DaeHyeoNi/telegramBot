@@ -80,7 +80,7 @@ class MarketDataFetcher:
                 if desc != "현재가":
                     trade_price = float(quote["last_extended_hours_trade_price"])
                 val = value["main"]["value"]
-                percentage = val.split('(')[1].split('%')[0]
+                percentage = val.split("(")[1].split("%")[0]
                 icon = MarketDataFetcher._get_icon_by_profit_percent(float(percentage))
                 messages.append(f"{icon} {desc}: {trade_price} {val}")
 
