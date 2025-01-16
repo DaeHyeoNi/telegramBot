@@ -219,7 +219,7 @@ def format_us_stock_message(
     """미국 주식 메시지를 포맷팅합니다."""
     message = f"[{company_name}]" if company_name else ""
     if chart_type != ChartType.REALTIME:
-        message += f" {chart_type.value} {stock_data}"
+        message += f" {chart_type.value}\n{stock_data}"
     else:
         message += f"\n{stock_data}"
     return message
